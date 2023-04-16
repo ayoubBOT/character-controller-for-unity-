@@ -52,11 +52,48 @@ namespace ayoublgr
 
                 _anim.SetBool("jump", false);
             }
+            
+            // If the player just landed, trigger the landing animation and start the cooldown timer
+            if (justLanded)
+            {
+                _anim.SetBool("land", true);
+                justLanded = false;
+                cooldownTimer = cooldown;
+            }
 
-            if (!isGrounded)
-                _anim.SetBool("Falling", true);
+            // Disable movement while the cooldown timer is running
+            if (cooldownTimer > 0)
+            {
+                cooldownTimer -= Time.deltaTime;
+                controller.Move(Vector3.zero);
+            }
+            // When the cooldown timer is over, reset the landing animation and allow movement again
             else
+            {
+                _anim.SetBool("land", false);
+            }
+
+            // Check if the player is falling
+            if (!isGrounded)
+            {
+                _anim.SetBool("Falling", true);
+                falltime += Time.deltaTime;
+                if (falltime >= 1f)
+                {
+                    // Player has fallen for 1 second, enable movement again
+                    justLanded = true;
+                    falltime = 0f;
+                }
+            }
+            else
+            {
                 _anim.SetBool("Falling", false);
+            }
+
+                    if (!isGrounded)
+                        _anim.SetBool("Falling", true);
+                    else
+                        _anim.SetBool("Falling", false);
 
 
             // If the player just landed, trigger the landing animation
