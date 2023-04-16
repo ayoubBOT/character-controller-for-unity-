@@ -25,12 +25,14 @@ namespace ayoublgr
         [Header("bool")]
         [SerializeField]
         private bool isGrounded, isJumping, justLanded, isRunning, canRun;
-
         [Header("Jumping cooldown")]
         public float cooldown = 1.0f;
         public float cooldownTimer = 0.0f;
 
         Vector3 velocity;
+        
+        float turnSmoothTime = .1f;
+        float TurnSmoothVelocity;
 
         void Start()
         {
@@ -109,27 +111,22 @@ namespace ayoublgr
             _anim.SetFloat("h", x, .1f, Time.deltaTime);
             _anim.SetFloat("v", z, .1f, Time.deltaTime);
 
-
-            // Calculate the move direction
-            Vector3 cameraForward = Camera.forward;
-            Vector3 cameraRight = Camera.right;
-            cameraForward.y = 0f;
-            cameraRight.y = 0f;
-            cameraForward = cameraForward.normalized;
-            cameraRight = cameraRight.normalized;
-            Vector3 moveDir = cameraForward * z + cameraRight * x;
-            moveDir.Normalize();
-
-
-            Quaternion targetRotation = cameraStartRotation;
-            if (Camera != null && Mathf.Abs(Input.GetAxisRaw("Mouse X")) >= 0)
-            {
-                targetRotation = Quaternion.Euler(0f, Camera.eulerAngles.y, 0f);
-            }
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-
-
-            controller.Move(moveDir * speed * Time.deltaTime);
+            Vector3 Dir = new Vector3(x,0f,z).normalized;
+            
+            
+            //  this bool is in a CameraScript that i wwill make a post here :)
+            if(isZoomedIn){
+            float TargetAngle = Mathf.Atan2(Dir.x,Dir.z) * Rad2Deg * camera.eulerAngles.y;
+            float angle = mathf.SmoothDampAngle(transform.eulerAngles.y,TargetAngle,ref TurnSmoothVelocity,turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0f,angle,0f);
+            
+            Vector3 moveDir = Quaternion.Euler(0f,TargetAngle,0f)*Vector3.forward;
+            controller.Move(moveDir.normalized * speed *Time.deltaTime);}
+            if(!isZoomedIn){
+            transform.rotation = Quaternion.Euler(0f,Camera.Euler.y,0f);
+            Controller.Move(Dir *speed * Time.deltaTime);}
+            
+            
             if (moveDir.magnitude > .5f)
             {
                 canRun = true;
